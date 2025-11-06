@@ -132,22 +132,3 @@ class RAGSystem:
 
         self.vectorstore.add_documents([doc], ids=[doc_id])
         #self.vectorstore.persist()
-
-'''
-def add_question(
-    persist_directory: str,
-    embeddings_model: str,
-    **kwargs
-):
-    """
-    Utilitaire qui ouvre la base depuis le disque, ajoute la question puis persiste.
-    À utiliser si tu n’as pas déjà une instance RAGSystem en mémoire.
-    """
-    system = RAGSystem(
-        documents=[],
-        persist_directory=persist_directory,
-        embedding_model=embeddings_model,
-    )
-    system.add_question(**kwargs)
-
-    '''

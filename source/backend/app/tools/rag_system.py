@@ -1,8 +1,12 @@
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
+
 from typing import List
 import os
+
+from app.tools.document_loader import build_document_from_fields
+
 
 
 class RAGSystem:
@@ -89,3 +93,61 @@ class RAGSystem:
             Liste des documents les plus pertinents
         """
         return self.vectorstore.similarity_search(query, k=k)
+    def add_question(
+        self,
+        question_id: int,
+        titre: str,
+        contenu: str,
+        thematique: str,
+        ecoles: str,
+        utilisateurs: str,
+        langue: str,
+        date: str = "",
+        post_type: str = "",
+        status: str = ""
+    ):
+        """
+        Ajoute ou met à jour une question dans la base vectorielle.
+        """
+        doc = build_document_from_fields(
+            question_id=question_id,
+            titre=titre,
+            contenu=contenu,
+            thematique=thematique,
+            ecoles=ecoles,
+            utilisateurs=utilisateurs,
+            langue=langue,
+            date=date,
+            post_type=post_type,
+            status=status,
+        )
+
+        doc_id = str(question_id)
+
+        # Supprime un ancien document portant le même ID si présent
+        try:
+            self.vectorstore.delete(ids=[doc_id])
+        except Exception:
+            pass  # l’ID n’existait pas encore
+
+        self.vectorstore.add_documents([doc], ids=[doc_id])
+        #self.vectorstore.persist()
+
+'''
+def add_question(
+    persist_directory: str,
+    embeddings_model: str,
+    **kwargs
+):
+    """
+    Utilitaire qui ouvre la base depuis le disque, ajoute la question puis persiste.
+    À utiliser si tu n’as pas déjà une instance RAGSystem en mémoire.
+    """
+    system = RAGSystem(
+        documents=[],
+        persist_directory=persist_directory,
+        embedding_model=embeddings_model,
+    )
+    system.add_question(**kwargs)
+
+    '''

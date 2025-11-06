@@ -77,8 +77,19 @@ def main(
     print("✅ Système RAG prêt !")
     print("=" * 80 + "\n")
     
+    rag_system.add_question(
+    question_id=999,
+    titre="Qui préside la france de nos jours ?",
+    contenu="le président de la france est Emmanuel Macron.",
+    thematique="Stage",
+    ecoles="ESILV",
+    utilisateurs="Étudiants",
+    langue="fr",
+)
+
+
     # 6. Exemple de question
-    question = "Qu'est-ce qui peut excuser une absence ?"
+    question = "Qui est le président en france ?"
     
     # Génération de la réponse
     print("⏳ Génération de la réponse...\n")

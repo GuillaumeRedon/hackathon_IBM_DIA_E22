@@ -2,6 +2,42 @@ import json
 from typing import List
 from langchain_core.documents import Document
 
+def build_document_from_fields(
+    question_id: int,
+    titre: str,
+    contenu: str,
+    thematique: str,
+    ecoles: str,
+    utilisateurs: str,
+    langue: str,
+    date: str = "",
+    post_type: str = "",
+    status: str = ""
+) -> Document:
+    """
+    Construit un Document LangChain depuis des champs individuels
+    en respectant le format existant.
+    """
+    text_content = f"""[Écoles: {ecoles or 'N/A'}] [Thématique: {thematique or ''}]
+
+Question: {titre}
+
+Réponse: {contenu}"""
+
+    metadata = {
+        "id": question_id,
+        "title": titre,
+        "date": date,
+        "post_type": post_type,
+        "langues": langue,
+        "thematiques": thematique,
+        "utilisateurs": utilisateurs or "N/A",
+        "ecoles": ecoles or "N/A",
+        "status": status,
+    }
+
+    return Document(page_content=text_content, metadata=metadata)
+
 
 def load_qa_documents(json_path: str) -> List[Document]:
     """

@@ -76,10 +76,10 @@ Réponse: {item.get('Content', '')}"""
             'ecoles': ecoles,
             'status': item.get('Status', '')
         }
-        
+
         # Créer le document LangChain
         doc = Document(page_content=text_content, metadata=metadata)
         documents.append(doc)
-    
+
     print(f"✓ Chargé {len(documents)} documents depuis {json_path}")
     return documents

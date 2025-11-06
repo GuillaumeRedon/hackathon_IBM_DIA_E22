@@ -4,6 +4,7 @@ from langchain_core.documents import Document
 
 from typing import List
 import os
+import uuid
 
 from app.tools.document_loader import build_document_from_fields
 
@@ -81,21 +82,8 @@ class RAGSystem:
         """Retourne le retriever pour utilisation dans une chaîne RAG"""
         return self.retriever
     
-    def search(self, query: str, k: int = 3) -> List[Document]:
-        """
-        Recherche les documents similaires à la requête.
-        
-        Args:
-            query: Question de l'utilisateur
-            k: Nombre de documents à retourner
-            
-        Returns:
-            Liste des documents les plus pertinents
-        """
-        return self.vectorstore.similarity_search(query, k=k)
     def add_question(
         self,
-        question_id: int,
         titre: str,
         contenu: str,
         thematique: str,
@@ -109,8 +97,9 @@ class RAGSystem:
         """
         Ajoute ou met à jour une question dans la base vectorielle.
         """
+        generated_id = str(uuid.uuid4())
         doc = build_document_from_fields(
-            question_id=question_id,
+            question_id=generated_id,
             titre=titre,
             contenu=contenu,
             thematique=thematique,
@@ -122,7 +111,7 @@ class RAGSystem:
             status=status,
         )
 
-        doc_id = str(question_id)
+        doc_id = generated_id
 
         # Supprime un ancien document portant le même ID si présent
         try:

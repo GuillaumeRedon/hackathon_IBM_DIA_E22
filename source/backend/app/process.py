@@ -3,7 +3,6 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from app.tools.document_loader import load_qa_documents
 from app.tools.rag_system import RAGSystem
-import os
 
 
 def format_docs(docs):
@@ -78,14 +77,13 @@ def main(
     print("=" * 80 + "\n")
     
     rag_system.add_question(
-    question_id=999,
-    titre="Qui préside la france de nos jours ?",
-    contenu="le président de la france est Emmanuel Macron.",
-    thematique="Stage",
-    ecoles="ESILV",
-    utilisateurs="Étudiants",
-    langue="fr",
-)
+        titre="Qui préside la france de nos jours ?",
+        contenu="le président de la france est Emmanuel Macron.",
+        thematique="Stage",
+        ecoles="ESILV",
+        utilisateurs="Étudiants",
+        langue="fr",
+    )
 
 
     # 6. Exemple de question

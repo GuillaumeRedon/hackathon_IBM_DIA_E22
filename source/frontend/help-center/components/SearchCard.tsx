@@ -10,7 +10,11 @@ import {
 import Card from './utils/Card';
 import { searchSuggestions } from '@/utils/constants/mockSearch';
 
-export default function SearchResponseComponent() {
+interface SearchResponseComponentProps {
+  onOpenHelpAI?: () => void;
+}
+
+export default function SearchResponseComponent({ onOpenHelpAI }: SearchResponseComponentProps) {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -36,7 +40,11 @@ export default function SearchResponseComponent() {
   }, []);
 
   const handleOpenHelpAI = () => {
-    console.log('Ouverture de la modal HelpAI');
+    if (onOpenHelpAI) {
+      onOpenHelpAI();
+    } else {
+      console.log('Ouverture de la modal HelpAI');
+    }
     setOpen(false);
     setSelectedIndex(0);
   };

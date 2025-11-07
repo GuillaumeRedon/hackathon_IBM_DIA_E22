@@ -1,20 +1,33 @@
+'use client';
+
+import { useState } from 'react';
 import DropdownCard from "../components/DropdownCard";
-import Card from "../components/utils/Card";
 import ListCard from "../components/ListCard";
 import { Youtube, FileMinus } from 'lucide-react';
 import SearchResponseComponent from "@/components/SearchCard";
 import Chip from "@/components/Chip";
 import WaitingSection from "@/components/WaitingSection";
-import { searchSuggestions } from "@/utils/constants/mockSearch";
+import HelpAIModal from "@/components/HelpAIModal";
 import { mockThemes } from "@/utils/constants/mockTheme";
 
 export default function Home() {
+  const [isHelpAIModalOpen, setIsHelpAIModalOpen] = useState(false);
+
+  const handleOpenHelpAI = () => {
+    console.log('Ouverture de la modal HelpAI depuis Page');
+    setIsHelpAIModalOpen(true);
+  };
+
+  const handleCloseHelpAI = () => {
+    setIsHelpAIModalOpen(false);
+  };
+
   return (
     <div className="flex flex-col gap-8">
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <SearchResponseComponent/>
+          <SearchResponseComponent onOpenHelpAI={handleOpenHelpAI} />
         </div>
         <div className="lg:col-span-1 flex flex-col">
           <h1 className="font-bold text-xl strong-blue mb-4">Thématiques</h1>
@@ -83,6 +96,12 @@ export default function Home() {
           ]}
         />
       </div>
+
+      {/* Modal HelpAI */}
+      <HelpAIModal
+        isOpen={isHelpAIModalOpen} 
+        onClose={handleCloseHelpAI} 
+      />
     </div>
   );
 }

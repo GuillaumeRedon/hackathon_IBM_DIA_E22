@@ -2,113 +2,121 @@
 
 ## 📋 Overview
 
-The frontend is a modern, responsive React application that provides an intuitive help center interface for the Pôle Léonard de Vinci. It features an AI-powered chatbot (HelpAI), an administrative dashboard for managing help requests, and a clean, user-friendly design.
+The frontend is a modern, responsive Next.js application built with React and TypeScript that provides an intuitive help center interface for the Pôle Léonard de Vinci. It features an AI-powered chatbot (HelpAI), an administrative dashboard for managing help requests, and a clean, user-friendly design with custom CSS variables.
 
 ## 🎯 Key Features
 
 ### 1. **Interactive Chatbot (HelpAI)**
-- Real-time conversation with AI assistant
-- Smart question suggestions
-- Context-aware responses
-- Seamless fallback to human support
+- Real-time conversation with AI assistant via backend API
+- Smart question suggestions with clickable chips
+- Markdown response rendering for rich content
+- Context-aware responses with conversation history
+- Seamless fallback to human support requests
 
 ### 2. **Help Request Management**
-- Submit questions when AI can't answer
-- Track request status
-- Administrator notification system
-- Full conversation history
+- Submit questions when AI can't provide satisfactory answers
+- Track request status (pending/resolved)
+- Administrator notification system via email capture
+- Full conversation history preservation in localStorage
 
 ### 3. **Administrative Dashboard**
-- View pending help requests
-- Respond to user questions
-- Mark requests as resolved
-- Filter and search capabilities
+- View pending help requests with metadata
+- Respond to user questions with rich form interface
+- Mark requests as resolved with API integration
+- Dynamic request list updates
+- Professional success feedback modals
 
-### 4. **Multilingual Support**
-- Primarily French interface
-- Extensible to multiple languages
-- Localized content and messages
+### 4. **Modern UI/UX**
+- Custom CSS variable-based theming
+- Responsive design for all device sizes
+- Professional modal system
+- Clean typography and spacing
+- Purple accent branding (#8072B9)
 
 ## 🏗️ Architecture
 
 ```
 source/frontend/help-center/
-├── src/
-│   ├── components/
-│   │   ├── ChatBot/
-│   │   │   ├── ChatWindow.tsx          # Main chat interface
-│   │   │   ├── MessageBubble.tsx       # Individual messages
-│   │   │   ├── SuggestionChips.tsx    # Question suggestions
-│   │   │   └── LoadingIndicator.tsx   # Typing animation
-│   │   ├── Admin/
-│   │   │   ├── AdminDashboard.tsx      # Admin panel
-│   │   │   ├── RequestList.tsx         # Help request list
-│   │   │   ├── RequestDetail.tsx       # Request details
-│   │   │   └── ResponseForm.tsx        # Response editor
-│   │   ├── Layout/
-│   │   │   ├── Header.tsx              # App header
-│   │   │   ├── Sidebar.tsx             # Navigation
-│   │   │   └── Footer.tsx              # App footer
-│   │   └── Common/
-│   │       ├── Button.tsx              # Reusable button
-│   │       ├── Input.tsx               # Form inputs
-│   │       ├── Modal.tsx               # Modal dialogs
-│   │       └── Notification.tsx        # Toast notifications
-│   ├── services/
-│   │   ├── api.ts                      # Backend API client
-│   │   ├── chatService.ts              # Chat functionality
-│   │   └── adminService.ts             # Admin operations
-│   ├── hooks/
-│   │   ├── useChat.ts                  # Chat state management
-│   │   ├── useHelpRequests.ts          # Request management
-│   │   └── useAuth.ts                  # Authentication
-│   ├── types/
-│   │   ├── chat.types.ts               # Chat interfaces
-│   │   ├── request.types.ts            # Request interfaces
-│   │   └── user.types.ts               # User interfaces
-│   ├── utils/
-│   │   ├── formatters.ts               # Date/text formatting
-│   │   ├── validators.ts               # Input validation
-│   │   └── constants.ts                # App constants
-│   ├── styles/
-│   │   ├── globals.css                 # Global styles
-│   │   ├── theme.ts                    # Theme configuration
-│   │   └── variables.css               # CSS variables
-│   ├── App.tsx                         # Root component
-│   └── main.tsx                        # Entry point
+├── app/                            # Next.js App Router
+│   ├── globals.css                 # Global styles with CSS variables
+│   ├── layout.tsx                  # Root layout component
+│   ├── page.tsx                    # Home page with search & themes
+│   └── admin/
+│       ├── page.tsx                # Admin dashboard
+│       └── form/
+│           └── page.tsx            # Admin response form
+├── components/
+│   ├── Chat.tsx                    # Main chatbot component
+│   ├── HelpAIModal.tsx            # Chat modal container
+│   ├── SearchCard.tsx             # Search interface component
+│   ├── Chip.tsx                   # Clickable theme chips
+│   ├── DropdownCard.tsx           # FAQ dropdown component
+│   ├── ListCard.tsx               # List display component
+│   ├── WaitingSection.tsx         # Loading/waiting UI
+│   ├── header.tsx                 # Application header
+│   ├── ui/                        # Shadcn/ui components
+│   │   ├── button.tsx             # Button variants
+│   │   ├── input.tsx              # Form inputs
+│   │   ├── textarea.tsx           # Text areas
+│   │   ├── select.tsx             # Select dropdowns
+│   │   ├── dialog.tsx             # Modal dialogs
+│   │   └── ...                    # Other UI primitives
+│   └── utils/
+│       └── Card.tsx               # Reusable card component
+├── hooks/
+│   ├── useHelpRequest.ts          # Help request management
+│   ├── useAdminHelpRequests.ts    # Admin request operations
+│   └── use-*.ts                   # Additional custom hooks
+├── utils/
+│   ├── helpRequestStorage.ts      # localStorage operations
+│   ├── debugHelpRequests.ts       # Development debugging
+│   ├── constants/
+│   │   ├── mockTheme.ts           # Theme data
+│   │   └── mockSearch.ts          # Search suggestions
+│   └── types/
+│       └── searchSuggestion.type.ts # Type definitions
+├── types/
+│   └── helpRequest.ts             # Help request interfaces
+├── lib/
+│   └── utils.ts                   # Utility functions
 ├── public/
-│   ├── index.html
-│   └── assets/
-├── package.json
-├── tsconfig.json
-├── vite.config.ts
-└── .env.example
+│   └── assets/                    # Static assets
+├── package.json                   # Dependencies & scripts
+├── next.config.ts                 # Next.js configuration
+├── tsconfig.json                  # TypeScript configuration
+├── tailwind.config.js             # Tailwind CSS configuration
+└── postcss.config.mjs             # PostCSS configuration
 ```
 
 ## 🛠️ Technology Stack
 
-| Technology | Purpose |
-|-----------|---------|
-| **React 18** | UI library |
-| **TypeScript** | Type safety |
-| **Vite** | Build tool & dev server |
-| **React Router** | Navigation |
-| **Axios** | HTTP client |
-| **Tailwind CSS** | Utility-first styling |
-| **React Query** | Server state management |
-| **Zustand** | Client state management |
-| **React Hook Form** | Form management |
-| **Zod** | Schema validation |
-| **date-fns** | Date formatting |
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| **Next.js** | 16.0.1 | React framework with App Router |
+| **React** | 19.2.0 | UI library |
+| **TypeScript** | ^5 | Type safety |
+| **Tailwind CSS** | ^4 | Utility-first styling |
+| **Tailwind Animate CSS** | ^1.4.0 | Animation utilities |
+| **React Markdown** | ^10.1.0 | Markdown rendering |
+| **Lucide React** | ^0.552.0 | Icon library |
+| **Radix UI** | Various | Accessible UI primitives |
+| **Framer Motion** | ^11.18.2 | Animation library |
+| **Clsx** | ^2.1.1 | Conditional className utility |
+| **Class Variance Authority** | ^0.7.1 | Component variant management |
+| **Sonner** | ^2.0.7 | Toast notifications |
+| **pnpm** | - | Package manager |
 
 ## 📦 Installation
 
 ### Prerequisites
 
 ```bash
-# Node.js 16+ and npm
-node --version  # Should be 16.x or higher
-npm --version   # Should be 8.x or higher
+# Node.js 18+ and pnpm
+node --version  # Should be 18.x or higher
+pnpm --version  # Should be 8.x or higher
+
+# Install pnpm if not available
+npm install -g pnpm
 ```
 
 ### Setup Steps
@@ -118,31 +126,24 @@ npm --version   # Should be 8.x or higher
 cd source/frontend/help-center
 
 # Install dependencies
-npm install
-
-# Create environment file
-cp .env.example .env
+pnpm install
 
 # Start development server
-npm run dev
+pnpm dev
 ```
 
-### Environment Configuration
+### Available Scripts
 
-Create `.env` file:
+```bash
+# Development server
+pnpm dev          # Starts Next.js dev server at localhost:3000
 
-```env
-# Backend API
-VITE_API_BASE_URL=http://localhost:5000
-VITE_API_TIMEOUT=30000
+# Production build
+pnpm build        # Creates optimized production build
+pnpm start        # Starts production server
 
-# Feature Flags
-VITE_ENABLE_ADMIN=true
-VITE_ENABLE_ANALYTICS=false
-
-# App Configuration
-VITE_APP_NAME=Help Center
-VITE_APP_VERSION=1.0.0
+# Code quality
+pnpm lint         # Runs ESLint for code linting
 ```
 
 ## 🚀 Development
@@ -150,40 +151,23 @@ VITE_APP_VERSION=1.0.0
 ### Start Development Server
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
-Opens at `http://localhost:5173` (or next available port)
+Opens at `http://localhost:3000` by default
 
-### Build for Production
+### Key Development URLs
 
-```bash
-npm run build
-```
+- **Main App**: http://localhost:3000/
+- **Admin Dashboard**: http://localhost:3000/admin
+- **Admin Form**: http://localhost:3000/admin/form
 
-Output: `dist/` directory
+### Development Features
 
-### Preview Production Build
-
-```bash
-npm run preview
-```
-
-### Linting & Formatting
-
-```bash
-# Run ESLint
-npm run lint
-
-# Fix auto-fixable issues
-npm run lint:fix
-
-# Format with Prettier
-npm run format
-
-# Type checking
-npm run type-check
-```
+- **Hot Reload**: Instant updates on file changes
+- **TypeScript**: Full type checking in development
+- **ESLint**: Code quality enforcement
+- **Tailwind CSS**: Instant styling with utility classes
 
 ## 🎨 User Interface Walkthrough
 
@@ -395,76 +379,64 @@ marquée comme résolue.
 
 ## 🎨 Design System
 
-### Color Palette
+### CSS Variables & Theming
+
+The application uses custom CSS variables defined in `app/globals.css`:
 
 ```css
 :root {
-  /* Primary */
-  --primary: #8B7AB8;        /* Purple - Main brand color */
-  --primary-light: #A595C9;  /* Lighter purple */
-  --primary-dark: #6B5A98;   /* Darker purple */
-  
-  /* Neutrals */
-  --white: #FFFFFF;
-  --gray-50: #F9FAFB;
-  --gray-100: #F3F4F6;
-  --gray-200: #E5E7EB;
-  --gray-300: #D1D5DB;
-  --gray-500: #6B7280;
-  --gray-700: #374151;
-  --gray-900: #111827;
-  
-  /* Semantic */
-  --success: #10B981;        /* Green */
-  --error: #EF4444;          /* Red */
-  --warning: #F59E0B;        /* Orange */
-  --info: #3B82F6;           /* Blue */
+  --background: #F5F8FA;           /* Main background */
+  --foreground: #171717;           /* Text color */
+  --grey-button: #EFF2F5;          /* Button background */
+  --bg-grey: #F5F8FA;              /* Secondary background */
+  --strong-blue: #181C32;          /* Primary text */
+  --purple-accent: #8072B9;        /* Accent color */
+}
+
+/* Tailwind integration */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-grey-button: var(--grey-button);
+  --color-bg-grey: var(--bg-grey);
+  --color-strong-blue: var(--strong-blue);
+  --color-purple-accent: var(--purple-accent);
 }
 ```
 
-### Typography
+### Component Styling Patterns
+
+#### Custom CSS Classes
 
 ```css
-:root {
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  
-  /* Sizes */
-  --text-xs: 0.75rem;    /* 12px */
-  --text-sm: 0.875rem;   /* 14px */
-  --text-base: 1rem;     /* 16px */
-  --text-lg: 1.125rem;   /* 18px */
-  --text-xl: 1.25rem;    /* 20px */
-  --text-2xl: 1.5rem;    /* 24px */
-  --text-3xl: 1.875rem;  /* 30px */
+/* Applied via className */
+.grey-button {
+  background-color: var(--grey-button);
+}
+
+.bg-grey {
+  background-color: var(--bg-grey);
+}
+
+.strong-blue {
+  color: var(--strong-blue);
+}
+
+.purple-accent {
+  background-color: var(--purple-accent);
 }
 ```
-
-### Spacing
-
-```css
-:root {
-  --space-1: 0.25rem;   /* 4px */
-  --space-2: 0.5rem;    /* 8px */
-  --space-3: 0.75rem;   /* 12px */
-  --space-4: 1rem;      /* 16px */
-  --space-6: 1.5rem;    /* 24px */
-  --space-8: 2rem;      /* 32px */
-  --space-12: 3rem;     /* 48px */
-}
-```
-
-### Component Patterns
 
 #### Button Styles
 
 ```tsx
-// Primary Button
-<button className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg transition-colors">
-  Confirmer
+// Primary Action Button
+<button className="px-6 py-3 bg-purple-accent text-white rounded-xl hover:opacity-90 transition-colors">
+  Envoyer
 </button>
 
 // Secondary Button
-<button className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg transition-colors">
+<button className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-200 transition-colors">
   Annuler
 </button>
 
@@ -477,139 +449,90 @@ marquée comme résolue.
 #### Message Bubbles
 
 ```tsx
-// User Message
-<div className="bg-primary text-white rounded-2xl rounded-tr-none px-4 py-3 max-w-[80%] ml-auto">
+// User Message (Right-aligned, Purple)
+<div className="max-w-[70%] p-4 rounded-xl bg-purple-accent text-white">
   {message}
 </div>
 
-// Assistant Message
-<div className="bg-gray-100 text-gray-900 rounded-2xl rounded-tl-none px-4 py-3 max-w-[80%]">
-  {message}
+// Assistant Message (Left-aligned, Gray)
+<div className="max-w-[70%] p-4 rounded-xl grey-button strong-blue">
+  <ReactMarkdown>{message}</ReactMarkdown>
 </div>
 ```
 
-## 🔌 API Integration
+## 🔌 Backend Integration
 
-### API Service Structure
+### API Communication
 
-```typescript
-// src/services/api.ts
-import axios from 'axios';
+The frontend communicates with the FastAPI backend through fetch requests:
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Response interceptor
-api.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    // Handle errors globally
-    if (error.response?.status === 401) {
-      // Redirect to login
-    }
-    return Promise.reject(error);
-  }
-);
-
-export default api;
-```
-
-### Chat Service
+#### Chat API Integration
 
 ```typescript
-// src/services/chatService.ts
-import api from './api';
+// In components/Chat.tsx
+const handleSubmit = async (e: React.FormEvent) => {
+  const apiMessages = [...messages, userMessage].map(msg => ({
+    id: msg.id,
+    role: msg.role === 'assistant' ? 'agent' : msg.role,
+    content: msg.content
+  }));
 
-export interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
+  const response = await fetch('http://localhost:8000/v1/ask/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: apiMessages })
+  });
 
-export interface ChatResponse {
-  answer: string;
-  confidence: number;
-  sources?: string[];
-}
-
-export const chatService = {
-  async sendMessage(message: string): Promise<ChatResponse> {
-    return api.post('/chat', { message });
-  },
-
-  async getSuggestions(): Promise<string[]> {
-    return api.get('/chat/suggestions');
-  },
+  const data = await response.json();
+  // Handle response...
 };
 ```
 
-### Admin Service
+#### Admin API Integration
 
 ```typescript
-// src/services/adminService.ts
-import api from './api';
+// In app/admin/form/page.tsx
+const handleSubmit = async (e: React.FormEvent) => {
+  const requestData = {
+    titre: formData.question,
+    contenu: `Question: ${formData.question}\n\nRéponse: ${formData.reponse}`,
+    ecoles: formData.ecole,
+    utilisateurs: formData.utilisateur,
+    langue: formData.langue
+  };
 
+  const response = await fetch('http://localhost:8000/v1/add_question/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestData)
+  });
+};
+```
+
+### Data Storage
+
+#### localStorage Management
+
+```typescript
+// In utils/helpRequestStorage.ts
 export interface HelpRequest {
   id: string;
   question: string;
-  conversation: ChatMessage[];
+  conversation: Message[];
   userEmail: string;
+  date: string;
   status: 'pending' | 'resolved';
-  createdAt: Date;
-  school: string;
-  userType: string;
 }
 
-export const adminService = {
-  async getHelpRequests(): Promise<HelpRequest[]> {
-    return api.get('/admin/requests');
-  },
+export const saveHelpRequest = (request: HelpRequest): void => {
+  const requests = getHelpRequests();
+  requests.push(request);
+  localStorage.setItem('helpRequests', JSON.stringify(requests));
+};
 
-  async getRequestById(id: string): Promise<HelpRequest> {
-    return api.get(`/admin/requests/${id}`);
-  },
-
-  async resolveRequest(
-    id: string,
-    response: string,
-    metadata: {
-      language: string;
-      school: string;
-      userType: string;
-    }
-  ): Promise<void> {
-    return api.post(`/admin/requests/${id}/resolve`, {
-      response,
-      ...metadata,
-    });
-  },
-
-  async createHelpRequest(
-    question: string,
-    conversation: ChatMessage[]
-  ): Promise<HelpRequest> {
-    return api.post('/admin/requests', {
-      question,
-      conversation,
-    });
-  },
+export const getHelpRequests = (): HelpRequest[] => {
+  const stored = localStorage.getItem('helpRequests');
+  return stored ? JSON.parse(stored) : [];
 };
 ```
 

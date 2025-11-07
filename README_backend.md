@@ -2,7 +2,7 @@
 
 ## 📋 Overview
 
-The backend is a sophisticated RAG (Retrieval-Augmented Generation) system built with Python, LangChain, and IBM watsonx.ai. It provides intelligent question-answering capabilities for the Pôle Léonard de Vinci Help Center by combining semantic search with generative AI.
+The backend is a sophisticated RAG (Retrieval-Augmented Generation) system built with FastAPI, Python, LangChain, and IBM watsonx.ai. It provides intelligent question-answering capabilities for the Pôle Léonard de Vinci Help Center by combining semantic search with generative AI through RESTful API endpoints.
 
 ## 🏗️ Architecture
 
@@ -10,32 +10,49 @@ The backend is a sophisticated RAG (Retrieval-Augmented Generation) system built
 
 ```
 source/backend/
-├── app/
-│   ├── tools/
-│   │   ├── document_loader.py      # JSON to LangChain Documents
-│   │   ├── rag_system.py           # Vector DB & Retrieval
-│   │   └── IBMWatsonxChat.py       # watsonx.ai Integration
-│   └── process.py                  # RAG Pipeline Orchestration
-├── main.py                         # Application Entry Point
-└── .env                            # Environment Configuration
+├── main.py                         # FastAPI Application Entry Point
+├── requirements.txt                # Python Dependencies
+├── api/
+│   ├── router.py                   # Main API Router
+│   └── v1/
+│       ├── router.py               # Version 1 API Router
+│       └── endpoints/
+│           ├── ask.py              # Chat/Question Endpoint
+│           └── add_question.py     # Add New Q&A Endpoint
+├── schemas/
+│   ├── message.py                  # Message/Chat Schemas
+│   └── question.py                 # Question Addition Schema
+└── tools/
+    ├── document_loader.py          # JSON to LangChain Documents
+    ├── rag_system.py               # Vector DB & Retrieval
+    └── IBMWatsonxChat.py           # watsonx.ai Integration
 ```
+
+### API Endpoints
+
+| Endpoint | Method | Purpose | Request Format |
+|----------|--------|---------|----------------|
+| `/v1/ask/` | POST | Ask questions to AI | `{"messages": [{"id": "datetime", "role": "user|agent", "content": "string"}]}` |
+| `/v1/add_question/` | POST | Add new Q&A to knowledge base | `{"titre": "string", "contenu": "string", "ecoles": "enum", ...}` |
 
 ### Data Flow
 
 ```
-JSON FAQ Data
+HTTP Request (JSON)
      ↓
-Document Loader (Metadata Enrichment)
+FastAPI Endpoint (/v1/ask/ or /v1/add_question/)
+     ↓
+Pydantic Schema Validation
      ↓
 RAG System (Chroma Vector DB + HuggingFace Embeddings)
      ↓
 Retrieval (MMR Algorithm, k=8)
      ↓
-Prompt Construction (Context + Question)
+Prompt Construction (Context + Question + Conversation History)
      ↓
 IBM watsonx.ai (Llama 3.3 70B)
      ↓
-Generated Response
+JSON Response
 ```
 
 ## 🔧 Technical Stack
@@ -45,6 +62,8 @@ Generated Response
 | Library | Version | Purpose |
 |---------|---------|---------|
 | **Python** | 3.10+ | Runtime environment |
+| **FastAPI** | ≥0.104.1 | Modern web framework for building APIs |
+| **Uvicorn** | Latest | ASGI server for FastAPI |
 | **LangChain** | Latest | RAG orchestration framework |
 | **langchain-community** | Latest | Community integrations |
 | **langchain-chroma** | Latest | Chroma vector store integration |
@@ -53,6 +72,7 @@ Generated Response
 | **ibm-cloud-sdk-core** | Latest | IBM Cloud authentication |
 | **python-dotenv** | Latest | Environment variable management |
 | **requests** | Latest | HTTP client for API calls |
+| **pydantic** | ≥2.9.0 | Data validation and serialization |
 
 ### AI Models
 
@@ -96,15 +116,20 @@ source .venv/bin/activate
 
 ```bash
 pip install --upgrade pip
+pip install -r requirements.txt
 
-pip install langchain \
+# Or install manually:
+pip install fastapi \
+            uvicorn[standard] \
+            langchain \
             langchain-community \
             langchain-chroma \
             chromadb \
             langchain-core \
             ibm-cloud-sdk-core \
             python-dotenv \
-            requests
+            requests \
+            pydantic
 ```
 
 ### 4. Environment Configuration
@@ -132,43 +157,171 @@ LOG_LEVEL=INFO
 
 ## 🚀 Usage
 
-### Basic Execution
+### Starting the FastAPI Server
 
 ```bash
 # Ensure you're in the backend directory with activated venv
 cd source/backend
-python main.py
+
+# Start the development server
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+# Or for production
+uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-### First Run Behavior
+### API Documentation
 
-On the first execution:
-- Reads the FAQ data from `source/database/samples/clean-json-file.json`
-- Creates embeddings using HuggingFace model (may take 2-5 minutes)
-- Persists the vector database to `source/database/prod/`
-- Processes the example question
+Once the server is running, you can access:
 
-**Console Output:**
+- **Interactive API docs**: http://localhost:8000/docs (Swagger UI)
+- **Alternative docs**: http://localhost:8000/redoc (ReDoc)
+- **OpenAPI schema**: http://localhost:8000/openapi.json
+
+### API Endpoints Usage
+
+#### 1. Ask Questions (`POST /v1/ask/`)
+
+Send chat messages and receive AI responses with conversation context.
+
+**Request Format:**
+```json
+{
+  "messages": [
+    {
+      "id": "2025-11-07T13:55:00Z",
+      "role": "user",
+      "content": "Bonjour, je voudrais des informations sur les absences"
+    },
+    {
+      "id": "2025-11-07T13:55:05Z", 
+      "role": "agent",
+      "content": "Bonjour ! Je peux vous renseigner sur les règles d'absences. Que souhaitez-vous savoir ?"
+    },
+    {
+      "id": "2025-11-07T13:56:00Z",
+      "role": "user", 
+      "content": "Est-ce qu'un rendez-vous médical excuse une absence ?"
+    }
+  ]
+}
 ```
-Création de la base vectorielle...
-Chargement des documents...
-✓ 150 documents chargés
-✓ Base vectorielle créée et persistée
-Question: Quelles sont les démarches à faire pour un stage en entreprise ?
-Recherche dans la base...
-Appel à watsonx.ai...
-Réponse: [Generated answer]
+
+**Response Format:**
+```json
+{
+  "status": "200",
+  "response": "Oui, un rendez-vous médical peut excuser une absence. Vous devez fournir un justificatif médical..."
+}
 ```
 
-### Subsequent Runs
+**cURL Example:**
+```bash
+curl -X POST "http://localhost:8000/v1/ask/" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "messages": [
+         {
+           "id": "2025-11-07T13:56:00Z",
+           "role": "user",
+           "content": "Comment justifier une absence ?"
+         }
+       ]
+     }'
+```
 
-- Automatically loads the persisted vector database
-- Much faster startup (< 5 seconds)
-- Ready to process queries immediately
+#### 2. Add Questions (`POST /v1/add_question/`)
+
+Add new Q&A pairs to the knowledge base.
+
+**Request Format:**
+```json
+{
+  "titre": "Horaires cafétéria dimanche",
+  "contenu": "Question: Quelles sont les heures d'ouverture de la cafétéria du campus le dimanche matin?\n\nRéponse: La cafétéria du campus est ouverte le dimanche de 9h00 à 14h00...",
+  "thematique": "Services campus",
+  "ecoles": "ESILV",
+  "utilisateurs": "student", 
+  "langue": "Français"
+}
+```
+
+**Response Format:**
+```json
+{
+  "status": "200",
+  "message": "Question added successfully"
+}
+```
+
+**Schema Validation:**
+- `titre`: string (required) - Short title for the Q&A
+- `contenu`: string (required) - Full question and answer content
+- `thematique`: string (optional) - Topic/category
+- `ecoles`: enum (required) - One of: "IIM", "EXECUTIVE", "EMLV", "ESILV"
+- `utilisateurs`: enum (required) - One of: "faculty-en", "anonymous", "staff", "student", "staff-en", "student-en", "faculty"
+- `langue`: enum (required) - One of: "Français", "English"
 
 ## 📝 Component Documentation
 
-### 1. Document Loader (`document_loader.py`)
+### 1. FastAPI Application (`main.py`)
+
+**Purpose**: Entry point for the web API server with CORS configuration.
+
+**Key Features:**
+- FastAPI application setup
+- CORS middleware for frontend integration
+- API router inclusion
+- Environment configuration loading
+
+**CORS Configuration:**
+```python
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Next.js frontend
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+### 2. API Routers (`api/`)
+
+**Structure:**
+- `api/router.py`: Main API router
+- `api/v1/router.py`: Version 1 API endpoints
+- `api/v1/endpoints/`: Individual endpoint implementations
+
+**Versioning Strategy:**
+- `/v1/` prefix for version 1 endpoints
+- Future versions can be added as `/v2/`, etc.
+- Backwards compatibility maintained
+
+### 3. Schemas (`schemas/`)
+
+**Message Schema (`message.py`):**
+```python
+class MessageSchema(BaseModel):
+    id: datetime              # Message timestamp
+    role: Literal["user", "agent"]  # Message sender
+    content: str             # Message content
+
+class MessageList(BaseModel):
+    messages: list[MessageSchema]  # Conversation history
+```
+
+**Question Schema (`question.py`):**
+```python
+class QuestionSchema(BaseModel):
+    titre: str                                    # Q&A title
+    contenu: str                                 # Full content
+    thematique: Optional[str] = ""               # Topic category
+    ecoles: Literal['IIM', 'EXECUTIVE', 'EMLV', 'ESILV']  # School
+    utilisateurs: Literal[...]                   # User type
+    langue: Literal["Français", "English"]      # Language
+```
+
+### 4. Document Loader (`document_loader.py`)
 
 **Purpose**: Converts JSON FAQ entries into LangChain Document objects with rich metadata.
 
@@ -207,7 +360,7 @@ documents = loader.load()
 }
 ```
 
-### 2. RAG System (`rag_system.py`)
+### 5. RAG System (`rag_system.py`)
 
 **Purpose**: Manages the Chroma vector database and retrieval operations.
 
@@ -255,7 +408,7 @@ rag.add_question(
 )
 ```
 
-### 3. IBM Watsonx Chat (`IBMWatsonxChat.py`)
+### 6. IBM Watsonx Chat (`IBMWatsonxChat.py`)
 
 **Purpose**: Custom LangChain integration for IBM watsonx.ai API.
 
@@ -299,60 +452,66 @@ llm = IBMWatsonxChat(
 5. Auto-refresh when expired
 ```
 
-### 4. Process (`process.py`)
+### 7. API Endpoints (`api/v1/endpoints/`)
 
-**Purpose**: Orchestrates the complete RAG pipeline.
+**Ask Endpoint (`ask.py`):**
 
-**Pipeline Stages:**
+**Purpose**: Processes chat conversations and returns AI-generated responses.
 
+**Key Features:**
+- Conversation history processing
+- RAG-based context retrieval
+- Prompt engineering with conversation context
+- IBM watsonx.ai integration
+
+**Processing Pipeline:**
 ```python
-from app.process import RAGProcessor
-
-processor = RAGProcessor(
-    llm=watsonx_llm,
-    rag_system=rag_system
-)
-
-# Complete pipeline
-response = processor.process_question(
-    question="Quelles sont les démarches pour un stage ?",
-    user_context={
-        "school": "ESILV",
-        "user_type": "student"
-    }
-)
+@router.post("/", summary="Ask something to the AI")
+async def ask(messages: MessageList):
+    # 1. Extract last user question
+    # 2. Format conversation history
+    # 3. Retrieve relevant documents from vector DB
+    # 4. Construct prompt with context + conversation
+    # 5. Call IBM watsonx.ai
+    # 6. Return formatted response
 ```
 
-**Prompt Engineering:**
+**Add Question Endpoint (`add_question.py`):**
 
-The system uses a carefully crafted prompt:
+**Purpose**: Adds new Q&A pairs to the vector database.
 
+**Key Features:**
+- Schema validation via Pydantic
+- Dynamic vector database updates
+- Metadata enrichment
+- Persistent storage
+
+**Processing Pipeline:**
 ```python
-system_prompt = """
-Tu es l'assistant virtuel du Pôle Léonard de Vinci.
-
-Contexte:
-{context}
-
-Rôle:
-- Réponds de manière claire et concise
-- Utilise les informations du contexte
-- Si tu ne sais pas, indique-le poliment
-- Maintiens un ton professionnel et amical
-
-Question: {question}
-
-Réponse:
-"""
+@router.post("/", summary="Add a new question")
+async def add_question(question: QuestionSchema):
+    # 1. Validate input schema
+    # 2. Initialize RAG system
+    # 3. Add question to vector database
+    # 4. Persist changes
+    # 5. Return success status
 ```
-
-**Context Management:**
-- Retrieves top 8 most relevant documents
-- Formats context with metadata
-- Injects into prompt template
-- Generates response with watsonx.ai
 
 ## 🔄 Advanced Features
+
+### Frontend Integration
+
+The backend is designed to work seamlessly with the Next.js frontend:
+
+**CORS Configuration:**
+- Allows requests from `localhost:3000` (Next.js dev server)
+- Supports all HTTP methods and headers
+- Enables credentials for authentication
+
+**Error Handling:**
+- Standardized error responses
+- HTTP status codes (200, 422, 500)
+- Detailed error messages for debugging
 
 ### Custom Retrieval Filters
 
@@ -414,6 +573,46 @@ responses = processor.batch_process(questions)
 
 ## 🧪 Testing
 
+### API Testing with cURL
+
+**Test the Ask endpoint:**
+```bash
+curl -X POST "http://localhost:8000/v1/ask/" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "messages": [
+         {
+           "id": "2025-11-07T13:56:00Z",
+           "role": "user",
+           "content": "Comment justifier une absence ?"
+         }
+       ]
+     }'
+```
+
+**Test the Add Question endpoint:**
+```bash
+curl -X POST "http://localhost:8000/v1/add_question/" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "titre": "Test Question",
+       "contenu": "Question: Test?\n\nRéponse: Test response.",
+       "ecoles": "ESILV",
+       "utilisateurs": "student",
+       "langue": "Français"
+     }'
+```
+
+### Interactive Testing
+
+Use the built-in Swagger UI at `http://localhost:8000/docs` for interactive API testing:
+
+1. Navigate to the docs page
+2. Click on an endpoint to expand it
+3. Click "Try it out"
+4. Fill in the request body
+5. Click "Execute" to test
+
 ### Unit Tests
 
 ```bash
@@ -431,30 +630,43 @@ pytest --cov=app tests/
 
 ```
 tests/
+├── test_api_endpoints.py
 ├── test_document_loader.py
 ├── test_rag_system.py
 ├── test_watsonx_chat.py
-└── test_process.py
+└── test_schemas.py
 ```
 
 ### Manual Testing
 
 ```python
-# Test document loading
-from app.tools.document_loader import DocumentLoader
-loader = DocumentLoader("source/database/samples/clean-json-file.json")
-docs = loader.load()
-print(f"Loaded {len(docs)} documents")
+# Test FastAPI app
+from fastapi.testclient import TestClient
+from main import app
 
-# Test embeddings
-from app.tools.rag_system import RAGSystem
-rag = RAGSystem()
-results = rag.similarity_search("test query", k=3)
+client = TestClient(app)
 
-# Test watsonx.ai connection
-from app.tools.IBMWatsonxChat import IBMWatsonxChat
-llm = IBMWatsonxChat(...)
-response = llm.invoke("Hello, test message")
+# Test ask endpoint
+response = client.post("/v1/ask/", json={
+    "messages": [
+        {
+            "id": "2025-11-07T13:56:00Z",
+            "role": "user",
+            "content": "Test question"
+        }
+    ]
+})
+print(response.json())
+
+# Test add question endpoint
+response = client.post("/v1/add_question/", json={
+    "titre": "Test",
+    "contenu": "Test content",
+    "ecoles": "ESILV", 
+    "utilisateurs": "student",
+    "langue": "Français"
+})
+print(response.json())
 ```
 
 ## 📊 Performance Optimization
@@ -503,6 +715,50 @@ langchain.llm_cache = InMemoryCache()
 ```
 
 ## 🐛 Troubleshooting
+
+### Issue: FastAPI Server Won't Start
+
+**Symptoms:**
+```
+ImportError: No module named 'fastapi'
+AttributeError: module 'uvicorn' has no attribute 'run'
+```
+
+**Solutions:**
+1. Install missing dependencies:
+```bash
+pip install fastapi uvicorn[standard]
+```
+
+2. Check Python version compatibility
+3. Activate virtual environment properly
+
+### Issue: CORS Errors from Frontend
+
+**Symptoms:**
+```
+Access-Control-Allow-Origin header missing
+CORS request blocked
+```
+
+**Solutions:**
+1. Verify CORS middleware configuration in `main.py`
+2. Check frontend URL matches allowed origins
+3. Restart FastAPI server after CORS changes
+
+### Issue: 422 Unprocessable Entity
+
+**Symptoms:**
+```
+HTTP 422 error on API requests
+Validation error in request body
+```
+
+**Solutions:**
+1. Validate request JSON format matches schema
+2. Check required fields are present
+3. Verify enum values are correct
+4. Use API docs (`/docs`) to see expected format
 
 ### Issue: Authentication Errors
 

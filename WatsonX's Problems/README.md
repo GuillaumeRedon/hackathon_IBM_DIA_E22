@@ -1,4 +1,3 @@
-
 # 🧾 README – Diagnostic des erreurs IBM watsonx.ai (AutoAI & RAG Accelerator)
 
 ## 📂 Projet concerné
@@ -18,7 +17,12 @@
 - Se produit lors du **lancement de l'entraînement AutoAI** et de la **sauvegarde de la configuration**.  
 - Message exact :  
   > Une erreur s'est produite lors du lancement de l'entraînement AutoAI.  
-  > Error: Unexpected response code: 429
+  > Error: Unexpected response code: 429  
+
+**Capture d’écran :**
+<p align="center">
+  <img src="./images/auto_rag_error.png" alt="Erreur 429 AutoAI" width="750"/>
+</p>
 
 **Analyse :**
 - Le code HTTP **429** signifie **"Too Many Requests"**.  
@@ -45,6 +49,11 @@
   > Unable to embed and upload documents to vector store for collection name:  
   > `autoai_rag_8ec6f0bb_20251105162535` and embedding model: `ibm/slate-125m-english-rtrvr`.
 
+**Capture d’écran :**
+<p align="center">
+  <img src="./images/experimentation_rag_echec.png" alt="Erreur RAG vector store" width="750"/>
+</p>
+
 **Analyse :**
 - Le modèle RAG tente de créer une **base vectorielle (vector store)** à partir du **Cloud Object Storage (COS)**.  
 - L’erreur indique un **échec d’accès ou d’écriture** vers le stockage COS.
@@ -68,6 +77,11 @@
 
 **Contexte :**
 - Apparaît lors de la création du projet **Q&A with RAG Accelerator**.
+
+**Capture d’écran :**
+<p align="center">
+  <img src="./images/creation_error.png" alt="Erreur d’accès IAM" width="650"/>
+</p>
 
 **Analyse :**
 - Cela signifie que **watsonx** n’a pas pu générer le **jeton IAM** nécessaire pour exécuter la tâche.  
@@ -140,7 +154,3 @@ Souhaites-tu que je te le génère ? (il permettrait de tout tester avant de rel
 🧠 **Conseil final :**  
 Les erreurs que tu rencontres ne sont pas des fautes de paramétrage local, mais des **limitations ou incohérences entre IAM, quotas et intégrations COS**.  
 Un redéploiement sur une autre région (ex : Dallas) avec des identifiants IAM valides résout généralement ce type de blocage.
-
----
-
-Confiance : **99 %**

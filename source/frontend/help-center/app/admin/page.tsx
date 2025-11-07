@@ -5,25 +5,59 @@ import { useRouter } from "next/navigation";
 import Card from "@/components/utils/Card";
 import { MessageSquare } from "lucide-react";
 
-// Liste hardcodée de questions pour le POC
-const MOCK_QUESTIONS = [
-  "Comment réinitialiser mon mot de passe ?",
-  "Où trouver mon emploi du temps ?",
-  "Comment accéder à la bibliothèque en ligne ?",
-  "Quelles sont les démarches pour un stage à l'étranger ?",
-  "Comment contacter le service scolarité ?",
-  "Où se trouve la cafétéria ?",
-  "Comment s'inscrire aux examens ?",
-  "Quels sont les horaires d'ouverture du campus ?",
+// Liste hardcodée de questions + contexte pour le POC
+const MOCK_QUESTIONS: { question: string; contexte?: string }[] = [
+  {
+    question: "Comment réinitialiser mon mot de passe ?",
+    contexte:
+      "Comment réinitialiser mon mot de passe ? — Chatbot: Pour réinitialiser votre mot de passe, cliquez sur 'Mot de passe oublié' et suivez les instructions. — Étudiant: Je n'arrive toujours pas à recevoir l'email. — Chatbot: Vérifiez votre dossier spam ; si rien ne s'affiche, contactez le support pour renvoyer l'email.",
+  },
+  {
+    question: "Où trouver mon emploi du temps ?",
+    contexte:
+      "Où trouver mon emploi du temps ? — Chatbot: Votre emploi du temps est disponible dans l'onglet 'Mon planning' après connexion. — Étudiant: Il n'apparaît pas pour mon groupe. — Chatbot: Vérifiez vos inscriptions de groupe dans l'espace étudiant ou contactez la scolarité pour qu'ils valident votre groupe.",
+  },
+  {
+    question: "Comment accéder à la bibliothèque en ligne ?",
+    contexte:
+      "Comment accéder à la bibliothèque en ligne ? — Chatbot: Connectez-vous avec vos identifiants universitaires (SSO). — Étudiant: Le SSO renvoie une erreur 401. — Chatbot: Déconnectez-vous puis reconnectez-vous ; si l'erreur persiste, ouvrez un ticket au support technique avec une capture d'écran.",
+  },
+  {
+    question: "Quelles sont les démarches pour un stage à l'étranger ?",
+    contexte:
+      "Quelles sont les démarches pour un stage à l'étranger ? — Chatbot: Contactez le service relations internationales et suivez la procédure d'inscription. — Étudiant: Dois-je valider des crédits avant de partir ? — Chatbot: Consultez la fiche programme ; certaines validations sont requises selon votre parcours, le service pourra vous préciser le cas.",
+  },
+  {
+    question: "Comment contacter le service scolarité ?",
+    contexte: "Comment contacter le service scolarité ? — Chatbot: Par email à scolarite@ecole.edu ou via le formulaire en ligne. — Étudiant: Quel est le délai de réponse moyen ? — Chatbot: Le délai moyen est de 48-72 heures hors périodes d'affluence.",
+  },
+  {
+    question: "Où se trouve la cafétéria ?",
+    contexte: "Où se trouve la cafétéria ? — Chatbot: La cafétéria principale est au bâtiment A, rez-de-chaussée. — Étudiant: Y a-t-il des options végétariennes ? — Chatbot: Oui, des options végétariennes et véganes sont disponibles tous les jours.",
+  },
+  {
+    question: "Comment s'inscrire aux examens ?",
+    contexte: "Comment s'inscrire aux examens ? — Chatbot: L'inscription se fait sur l'espace étudiant, rubrique 'Examens'. — Étudiant: La date limite est dépassée, que faire ? — Chatbot: Contactez la scolarité au plus vite ; ils pourront vous indiquer si une procédure exceptionnelle est possible.",
+  },
+  {
+    question: "Quels sont les horaires d'ouverture du campus ?",
+    contexte: "Quels sont les horaires d'ouverture du campus ? — Chatbot: Le campus est ouvert de 8h à 20h en semaine. — Étudiant: Y a-t-il des accès le weekend ? — Chatbot: Certains bâtiments restent accessibles le weekend via badge ; vérifiez les horaires et accès sur la page des services.",
+  },
+
 ];
 
 export default function AdminPage() {
   const router = useRouter();
 
-  const handleQuestionClick = (question: string, index: number) => {
-    // Encode la question pour l'URL
-    const encodedQuestion = encodeURIComponent(question);
-    router.push(`/admin/form?question=${encodedQuestion}&id=${index}`);
+  const handleQuestionClick = (
+    item: { question: string; contexte?: string },
+    index: number
+  ) => {
+    // Encode la question et le contexte pour l'URL
+    const encodedQuestion = encodeURIComponent(item.question);
+    const encodedContext = item.contexte ? encodeURIComponent(item.contexte) : "";
+    const contextParam = encodedContext ? `&context=${encodedContext}` : "";
+    router.push(`/admin/form?question=${encodedQuestion}&id=${index}${contextParam}`);
   };
 
   return (
@@ -42,10 +76,10 @@ export default function AdminPage() {
             Questions en attente de réponse
           </h2>
           <div className="space-y-2">
-            {MOCK_QUESTIONS.map((question, index) => (
+            {MOCK_QUESTIONS.map((item, index) => (
               <button
                 key={index}
-                onClick={() => handleQuestionClick(question, index)}
+                onClick={() => handleQuestionClick(item, index)}
                 className="w-full text-left p-4 rounded-lg border border-gray-200 hover:border-purple-accent hover:bg-grey-button transition-all duration-200 group"
               >
                 <div className="flex items-start gap-3">
@@ -56,7 +90,7 @@ export default function AdminPage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-gray-800 group-hover:text-purple-accent font-medium">
-                      {question}
+                      {item.question}
                     </p>
                   </div>
                   <svg

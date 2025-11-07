@@ -19,6 +19,7 @@ function AdminFormContent() {
   const [formData, setFormData] = useState({
     question: "",
     reponse: "",
+    contexte: "",
     langue: "",
     ecole: "",
     utilisateur: "",
@@ -28,10 +29,19 @@ function AdminFormContent() {
 
   useEffect(() => {
     const questionParam = searchParams.get("question");
+    // Try both 'context' (english) and 'contexte' (fr) query params
+    const contextParam = searchParams.get("context") || searchParams.get("contexte");
     if (questionParam) {
       setFormData((prev) => ({
         ...prev,
         question: decodeURIComponent(questionParam),
+      }));
+    }
+
+    if (contextParam) {
+      setFormData((prev) => ({
+        ...prev,
+        contexte: decodeURIComponent(contextParam),
       }));
     }
   }, [searchParams]);
@@ -112,6 +122,22 @@ function AdminFormContent() {
               {errors.question && (
                 <p className="text-red-500 text-sm mt-1">Ce champ est obligatoire</p>
               )}
+            </div>
+            
+      
+
+            {/* Contexte (lecture seule) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contexte (conversation)
+              </label>
+              <Textarea
+                value={formData.contexte}
+                readOnly
+                placeholder="Aucun contexte disponible"
+                rows={4}
+                className="text-black bg-gray-100 cursor-not-allowed"
+              />
             </div>
 
             {/* Réponse */}

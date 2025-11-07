@@ -92,7 +92,7 @@ class RAGSystem:
         ecoles: str,
         utilisateurs: str,
         langue: str,
-        date: datetime = datetime.now(),
+        date: str = datetime.now().strftime("%Y-%m-%d"),
         post_type: str = "",
         status: str = ""
     ):

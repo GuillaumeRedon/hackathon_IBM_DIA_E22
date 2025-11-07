@@ -1,6 +1,7 @@
 "use client"
  
 import { useState, useEffect, useRef } from "react"
+import ReactMarkdown from "react-markdown"
 import { useHelpRequest } from "@/hooks/useHelpRequest"
 import "@/utils/debugHelpRequests"
 
@@ -65,7 +66,7 @@ export function ChatBot(props: ChatProps) {
     setShowConfirmation(false)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isChatDisabled) return
     
@@ -76,18 +77,57 @@ export function ChatBot(props: ChatProps) {
     }
     
     setMessages(prev => [...prev, userMessage])
+    const currentInput = input
     setInput("")
     setIsLoading(true)
-    ''
-    setTimeout(() => {
+    
+    try {
+      // Préparer les messages pour l'API (conversion du format)
+      const apiMessages = [...messages, userMessage].map(msg => ({
+        id: msg.id,
+        role: msg.role === 'assistant' ? 'agent' : msg.role, // Convertir 'assistant' en 'agent'
+        content: msg.content
+      }))
+
+      // Appel API
+      const response = await fetch('http://localhost:8000/v1/ask/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: apiMessages
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Erreur API: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      // Créer le message de réponse de l'assistant
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `Réponse simulée du modèle pour: "${input}"`
+        content: data.response || data.message || 'Désolé, je n\'ai pas pu traiter votre demande.'
       }
+      
       setMessages(prev => [...prev, assistantMessage])
+    } catch (error) {
+      console.error('Erreur lors de l\'appel API:', error)
+      
+      // Message d'erreur en cas d'échec
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'Désolé, je rencontre des difficultés techniques. Veuillez réessayer plus tard ou contacter un administrateur.'
+      }
+      
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   const suggestions = [
@@ -138,7 +178,29 @@ export function ChatBot(props: ChatProps) {
                     boxShadow: message.role === 'assistant' ? '0px 0px 10px 0px rgba(76, 87, 125, 0.08)' : 'none'
                   }}
                 >
-                  {message.content}
+                  {message.role === 'assistant' ? (
+                    <div className="prose prose-sm max-w-none">
+                      <ReactMarkdown 
+                        components={{
+                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                          ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
+                          ol: ({ children }) => <ol className="list-decimal pl-4 mb-2">{children}</ol>,
+                          li: ({ children }) => <li className="mb-1">{children}</li>,
+                          strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                          em: ({ children }) => <em className="italic">{children}</em>,
+                          code: ({ children }) => <code className="bg-gray-100 px-1 py-0.5 rounded text-sm">{children}</code>,
+                          pre: ({ children }) => <pre className="bg-gray-100 p-2 rounded mt-2 overflow-x-auto">{children}</pre>,
+                          h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
+                          h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
+                          h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    message.content
+                  )}
                 </div>
               </div>
               

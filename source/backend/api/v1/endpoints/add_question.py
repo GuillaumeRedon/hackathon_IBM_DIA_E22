@@ -10,7 +10,7 @@ async def add_question(question: QuestionSchema):
     try:
 
         rag_system = RAGSystem(
-                persist_directory="./source/database/prod"
+                persist_directory="../database/prod"
         )
 
         rag_system.add_question(

@@ -104,17 +104,51 @@ function AdminFormContent() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validateForm()) {
-      if (currentRequest) {
-        updateRequestStatus(currentRequest.id, 'resolved');
-        console.log("Demande d'aide résolue:", currentRequest.id);
+      try {
+        const contenu = `Question: ${formData.question}\n\nRéponse: ${formData.reponse}`;
+
+        const requestData = {
+          titre: formData.question.length > 50 ? formData.question.substring(0, 50) + "..." : formData.question,
+          contenu: contenu,
+          thematique: "",
+          ecoles: formData.ecole,
+          utilisateurs: formData.utilisateur,
+          langue: formData.langue
+        };
+
+        console.log("Données envoyées à l'API:", requestData);
+
+        const response = await fetch('http://localhost:8000/v1/add_question/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestData)
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erreur API: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("Question ajoutée avec succès:", result);
+
+        if (currentRequest) {
+          updateRequestStatus(currentRequest.id, 'resolved');
+          console.log("Demande d'aide résolue:", currentRequest.id);
+        }
+        
+        console.log("Formulaire soumis:", formData);
+        setShowSuccessModal(true);
+        
+      } catch (error) {
+        console.error('Erreur lors de l\'ajout de la question:', error);
+        alert('Erreur lors de l\'enregistrement. Veuillez réessayer.');
       }
-      
-      console.log("Formulaire soumis:", formData);
-      setShowSuccessModal(true);
     }
   };
 

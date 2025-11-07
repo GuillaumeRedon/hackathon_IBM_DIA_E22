@@ -1,6 +1,8 @@
 "use client"
  
 import { useState, useEffect, useRef } from "react"
+import { useHelpRequest } from "@/hooks/useHelpRequest"
+import "@/utils/debugHelpRequests"
 
 type Message = {
   id: string
@@ -16,7 +18,11 @@ export function ChatBot(props: ChatProps) {
   const [messages, setMessages] = useState<Message[]>(props.initialMessages || [])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [isChatDisabled, setIsChatDisabled] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  
+  const { createHelpRequest } = useHelpRequest()
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -26,9 +32,42 @@ export function ChatBot(props: ChatProps) {
     scrollToBottom()
   }, [messages, isLoading])
 
+  const handleOpenHelpRequest = () => {
+    setShowConfirmation(true)
+  }
+
+  const confirmHelpRequest = () => {
+    console.log('Demande d\'aide ouverte pour un admin')
+    
+    const firstUserMessage = messages.find(msg => msg.role === 'user');
+    const firstQuestion = firstUserMessage?.content || 'Aucune question spécifique';
+    
+    const helpRequest = createHelpRequest(firstQuestion, messages);
+    
+    if (helpRequest) {
+      console.log('Demande d\'aide sauvegardée avec succès:', helpRequest.id);
+    } else {
+      console.error('Erreur lors de la sauvegarde de la demande d\'aide');
+    }
+    
+    setShowConfirmation(false)
+    setIsChatDisabled(true)
+    
+    const systemMessage: Message = {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: 'Votre demande d\'aide a été transmise à un administrateur. Vous recevrez une réponse par mail dans les plus brefs délais. Vous pouvez quitter le chat.'
+    }
+    setMessages(prev => [...prev, systemMessage])
+  }
+
+  const cancelHelpRequest = () => {
+    setShowConfirmation(false)
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim()) return
+    if (!input.trim() || isChatDisabled) return
     
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -84,23 +123,35 @@ export function ChatBot(props: ChatProps) {
             </div>
           )}
           
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
+          {messages.map((message, index) => (
+            <div key={message.id}>
               <div
-                className={`max-w-[70%] p-4 rounded-xl ${
-                  message.role === 'user'
-                    ? 'bg-purple-accent text-white'
-                    : 'grey-button strong-blue'
-                }`}
-                style={{
-                  boxShadow: message.role === 'assistant' ? '0px 0px 10px 0px rgba(76, 87, 125, 0.08)' : 'none'
-                }}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                {message.content}
+                <div
+                  className={`max-w-[70%] p-4 rounded-xl ${
+                    message.role === 'user'
+                      ? 'bg-purple-accent text-white'
+                      : 'grey-button strong-blue'
+                  }`}
+                  style={{
+                    boxShadow: message.role === 'assistant' ? '0px 0px 10px 0px rgba(76, 87, 125, 0.08)' : 'none'
+                  }}
+                >
+                  {message.content}
+                </div>
               </div>
+              
+              {message.role === 'assistant' && !message.content.includes('Votre demande d\'aide a été transmise') && !isChatDisabled && (
+                <div className="flex justify-start mt-2 ml-2">
+                  <button
+                    onClick={handleOpenHelpRequest}
+                    className="text-xs px-3 py-1 text-gray-600 hover:text-purple-accent border border-gray-300 hover:border-purple-accent rounded-full transition-colors"
+                  >
+                    📞 Ouvrir une demande d'aide
+                  </button>
+                </div>
+              )}
             </div>
           ))}
           
@@ -121,9 +172,33 @@ export function ChatBot(props: ChatProps) {
             </div>
           )}
           
-          {/* Élément invisible pour le scroll automatique */}
           <div ref={messagesEndRef} />
         </div>
+
+        {showConfirmation && (
+          <div className="absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center z-20 rounded-2xl">
+            <div className="bg-white rounded-xl p-6 max-w-md mx-4">
+              <h3 className="text-lg font-semibold strong-blue mb-4">Demande d'aide administrateur</h3>
+              <p className="text-gray-700 mb-6">
+                Êtes-vous sûr de vouloir ouvrir une demande d'aide ? Un administrateur sera notifié et vous contactera bientôt.
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={cancelHelpRequest}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={confirmHelpRequest}
+                  className="px-4 py-2 bg-purple-accent text-white rounded-lg hover:opacity-90 transition-colors"
+                >
+                  Confirmer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Input */}
         <form onSubmit={handleSubmit} className="border-t border-gray-100 p-6 shrink-0">
@@ -132,16 +207,18 @@ export function ChatBot(props: ChatProps) {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Tapez votre message..."
-              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-accent focus:border-transparent transition-all duration-200"
+              placeholder={isChatDisabled ? "Chat désactivé - demande d'aide envoyée" : "Tapez votre message..."}
+              className={`flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-accent focus:border-transparent transition-all duration-200 ${
+                isChatDisabled ? 'bg-gray-100 cursor-not-allowed' : ''
+              }`}
               style={{
                 boxShadow: '0px 0px 10px 0px rgba(76, 87, 125, 0.05)'
               }}
-              disabled={isLoading}
+              disabled={isLoading || isChatDisabled}
             />
             <button
               type="submit"
-              disabled={isLoading || !input.trim()}
+              disabled={isLoading || !input.trim() || isChatDisabled}
               className="px-6 py-3 bg-purple-accent text-white rounded-xl hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
             >
               Envoyer

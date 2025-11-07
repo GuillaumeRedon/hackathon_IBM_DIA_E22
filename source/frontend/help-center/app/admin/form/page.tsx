@@ -6,7 +6,8 @@ import Card from "@/components/utils/Card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, User, Mail, Clock } from "lucide-react";
+import { useAdminHelpRequests } from "@/hooks/useAdminHelpRequests";
 
 const LANGUES = ["Français", "English"];
 const ECOLES = ["ESILV", "EMLV", "EXECUTIVE", "IIM"];
@@ -15,6 +16,7 @@ const UTILISATEURS = ["faculty", "staff", "student"];
 function AdminFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { getRequestById, updateRequestStatus } = useAdminHelpRequests();
 
   const [formData, setFormData] = useState({
     question: "",
@@ -26,25 +28,52 @@ function AdminFormContent() {
   });
 
   const [errors, setErrors] = useState<Record<string, boolean>>({});
+  const [currentRequest, setCurrentRequest] = useState<any>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     const questionParam = searchParams.get("question");
-    // Try both 'context' (english) and 'contexte' (fr) query params
     const contextParam = searchParams.get("context") || searchParams.get("contexte");
-    if (questionParam) {
+    const idParam = searchParams.get("id");
+    const emailParam = searchParams.get("email");
+    
+    const newFormData: any = {};
+    let hasChanges = false;
+    
+    if (questionParam && questionParam !== formData.question) {
+      newFormData.question = decodeURIComponent(questionParam);
+      hasChanges = true;
+    }
+
+    if (contextParam && contextParam !== formData.contexte) {
+      newFormData.contexte = decodeURIComponent(contextParam);
+      hasChanges = true;
+    }
+
+    if (hasChanges) {
       setFormData((prev) => ({
         ...prev,
-        question: decodeURIComponent(questionParam),
+        ...newFormData,
       }));
     }
 
-    if (contextParam) {
-      setFormData((prev) => ({
-        ...prev,
-        contexte: decodeURIComponent(contextParam),
-      }));
+    if (idParam && !currentRequest) {
+      const request = getRequestById(idParam);
+      if (request) {
+        setCurrentRequest(request);
+      }
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const idParam = searchParams.get("id");
+    if (idParam && !currentRequest) {
+      const request = getRequestById(idParam);
+      if (request) {
+        setCurrentRequest(request);
+      }
+    }
+  }, [getRequestById, searchParams, currentRequest]);
 
   const handleInputChange = (
     field: string,
@@ -54,7 +83,6 @@ function AdminFormContent() {
       ...prev,
       [field]: value,
     }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({
         ...prev,
@@ -80,11 +108,19 @@ function AdminFormContent() {
     e.preventDefault();
     
     if (validateForm()) {
-      // Ici, vous pouvez ajouter la logique pour sauvegarder les données
+      if (currentRequest) {
+        updateRequestStatus(currentRequest.id, 'resolved');
+        console.log("Demande d'aide résolue:", currentRequest.id);
+      }
+      
       console.log("Formulaire soumis:", formData);
-      alert("Réponse enregistrée avec succès !");
-      router.push("/admin");
+      setShowSuccessModal(true);
     }
+  };
+
+  const handleReturnToAdmin = () => {
+    setShowSuccessModal(false);
+    router.push("/admin");
   };
 
   return (
@@ -98,16 +134,37 @@ function AdminFormContent() {
       </button>
 
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2 text-black">Répondre à la question</h1>
+        <h1 className="text-3xl font-bold mb-2 text-black">
+          Répondre à une demande d'aide
+        </h1>
         <p className="text-gray-600">
           Remplissez tous les champs obligatoires pour publier la réponse
         </p>
+        
+        {currentRequest && (
+          <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 className="font-medium text-blue-900 mb-2">Informations de la demande</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="flex items-center gap-2 text-blue-700">
+                <Mail className="w-4 h-4" />
+                <span>{currentRequest.userEmail}</span>
+              </div>
+              <div className="flex items-center gap-2 text-blue-700">
+                <Clock className="w-4 h-4" />
+                <span>{new Date(currentRequest.date).toLocaleString('fr-FR')}</span>
+              </div>
+              <div className="flex items-center gap-2 text-blue-700">
+                <User className="w-4 h-4" />
+                <span>{currentRequest.conversation.length} messages</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit}>
         <Card>
           <div className="py-4 space-y-6">
-            {/* Question */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Question <span className="text-red-500">*</span>
@@ -124,23 +181,22 @@ function AdminFormContent() {
               )}
             </div>
             
-      
-
-            {/* Contexte (lecture seule) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Contexte (conversation)
+                Conversation complète
               </label>
               <Textarea
                 value={formData.contexte}
                 readOnly
                 placeholder="Aucun contexte disponible"
-                rows={4}
+                rows={8}
                 className="text-black bg-gray-100 cursor-not-allowed"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Conversation complète entre l'utilisateur et le chatbot
+              </p>
             </div>
 
-            {/* Réponse */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Réponse <span className="text-red-500">*</span>
@@ -157,7 +213,6 @@ function AdminFormContent() {
               )}
             </div>
 
-            {/* Langue */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Langue <span className="text-red-500">*</span>
@@ -174,7 +229,6 @@ function AdminFormContent() {
               )}
             </div>
 
-            {/* École */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 École <span className="text-red-500">*</span>
@@ -191,7 +245,6 @@ function AdminFormContent() {
               )}
             </div>
 
-            {/* Utilisateur */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Type d'utilisateur <span className="text-red-500">*</span>
@@ -208,7 +261,6 @@ function AdminFormContent() {
               )}
             </div>
 
-            {/* Buttons */}
             <div className="flex gap-4 pt-4 border-t">
               <button
                 type="button"
@@ -222,12 +274,37 @@ function AdminFormContent() {
                 className="px-6 py-2 bg-purple-accent text-white rounded-md hover:bg-[#574e7c] transition-colors flex items-center gap-2"
               >
                 <Save className="w-4 h-4" />
-                Enregistrer la réponse
+                Résoudre la demande
               </button>
             </div>
           </div>
         </Card>
       </form>
+
+      {/* Modal de succès */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md mx-4 shadow-xl">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold strong-blue mb-2">Demande résolue avec succès !</h3>
+              <p className="text-gray-600 mb-6">
+                La réponse a été enregistrée et la demande d'aide a été marquée comme résolue.
+              </p>
+              <button
+                onClick={handleReturnToAdmin}
+                className="w-full px-6 py-3 bg-purple-accent text-white rounded-lg hover:opacity-90 transition-colors font-medium"
+              >
+                Retour à l'administration
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

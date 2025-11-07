@@ -33,7 +33,14 @@ cd <repo>
 ### Create a new branch for each feature or fix:
 
 ```bash
-git checkout -b feature/my-awesome-feature
+start frontend :
+
+cd .\hackathon_IBM_DIA_E22\source\frontend\help-center
+npm run
+
+start backend
+
+
 ```
 
 ### Commit your changes:
@@ -57,4 +64,5 @@ git push origin feature/my-awesome-feature
 ## 5. Have Fun and Good Luck!
 
 Good luck during the IBM Hackathon — build, learn, and most importantly: **have fun!** 🚀
+
 

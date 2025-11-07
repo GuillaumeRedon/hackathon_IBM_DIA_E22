@@ -1,6 +1,6 @@
 "use client"
  
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 
 type Message = {
   id: string
@@ -16,6 +16,15 @@ export function ChatBot(props: ChatProps) {
   const [messages, setMessages] = useState<Message[]>(props.initialMessages || [])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, isLoading])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,35 +52,34 @@ export function ChatBot(props: ChatProps) {
   }
 
   const suggestions = [
-    "What is the weather in San Francisco?",
-    "Explain step-by-step how to solve this math problem: If x² + 6x + 9 = 25, what is x?",
-    "Design a simple algorithm to find the longest palindrome in a string.",
+    "Comment justifier une absence si je suis alternant ?",
+    "Que ce passe t-il si je ne valide pas un module ?",
+    "Quelles sont les démarches à faire pour un stage en entreprise ?",
   ]
  
   return (
-    <div className="flex flex-col h-[500px] w-full"> 
+    <div className="flex flex-col h-full w-full min-h-0"> 
       <div 
-        className="flex flex-col flex-1 border border-gray-200 rounded-xl bg-white"
-        style={{
-          boxShadow: '0px 0px 20px 0px rgba(76, 87, 125, 0.02)'
-        }}
+        className="flex flex-col flex-1 bg-white min-h-0"
       >
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 min-h-0">
           {messages.length === 0 && (
             <div className="text-center mt-8">
-              <h3 className="strong-blue font-semibold text-lg mb-4">Commencez une conversation avec l'IA</h3>
+              <h3 className="strong-blue font-semibold text-lg mb-4">Je n'ai pas trouvé la réponse à ma question, je demande de l'aide à HelpAI</h3>
               <div className="space-y-3">
                 <p className="text-sm strong-blue font-medium">Suggestions:</p>
+                <div className="flex flex-wrap gap-4 w-full justify-center">
                 {suggestions.map((suggestion, index) => (
                   <button
                     key={index}
                     onClick={() => setInput(suggestion)}
-                    className="block w-full text-left p-3 text-sm grey-button hover:bg-purple-accent hover:text-white rounded-lg transition-all duration-200 strong-blue"
+                    className="block text-left p-3 text-sm bg-gray-100 cursor-pointer hover:bg-purple-accent hover:text-white rounded-lg transition-all duration-200"
                   >
                     {suggestion}
                   </button>
                 ))}
+                </div>
               </div>
             </div>
           )}
@@ -112,10 +120,13 @@ export function ChatBot(props: ChatProps) {
               </div>
             </div>
           )}
+          
+          {/* Élément invisible pour le scroll automatique */}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input */}
-        <form onSubmit={handleSubmit} className="border-t border-gray-100 p-6">
+        <form onSubmit={handleSubmit} className="border-t border-gray-100 p-6 shrink-0">
           <div className="flex space-x-3">
             <input
               type="text"

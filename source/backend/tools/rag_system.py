@@ -6,7 +6,7 @@ from typing import List
 import os
 import uuid
 
-from app.tools.document_loader import build_document_from_fields
+from document_loader import build_document_from_fields
 
 
 

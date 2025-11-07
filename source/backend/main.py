@@ -1,6 +1,3 @@
-from app.tools.IBMWatsonxChat import IBMWatsonxChat
-import os
-from app.process import main
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from api.router import api_router
